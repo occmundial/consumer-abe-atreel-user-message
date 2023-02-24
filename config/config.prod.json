@@ -1,0 +1,16 @@
+{
+    "KafkaBrokers" : ["kfk-eda-1.svc.occ", "kfk-eda-2.svc.occ", "kfk-eda-3.svc.occ"],
+    "GroupID": "group-abe-atreel-consumer",
+    "Topics": ["atreel-abes-placed"],
+    "QueueRequestDelay": 3,
+    "QueueTimeout": 300,
+    "TxtSalary":"Salario no mostrado por compañía.",
+	"Occ":"https://www.occ.com.mx",
+	"ABE_UTM_EMPRESA" : "?&amp;tec=BS&amp;med=email&amp;idt=|idHtml|&amp;utm_source=ATREEL&amp;utm_medium=email&amp;utm_campaign=|idHtml|-aviso_agente_busca_empleo&amp;utm_term=empresa&amp;utm_content_empresa=",
+	"ReqParamHits":"10",
+	"RetryWaitMin":5,
+	"RetryWaitMax":5,
+	"RetryMax":3,
+	"APITimeout":5,
+	"DBTimeout" :3600
+}
