@@ -15,16 +15,6 @@ jobs:
           min_length: 5 # Min length of the branch name
           max_length: 50 # Max length of the branch name
 
-  commits-count:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: commits-count
-        with:
-          except-branches: 'main;master;release'
-
   build:
     name: build
     runs-on: ubuntu-latest
