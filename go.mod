@@ -1,6 +1,6 @@
 module github.com/occmundial/consumer-abe-atreel-user-message
 
-go 1.20
+go 1.19
 
 require (
 	github.com/rs/zerolog v1.29.0
