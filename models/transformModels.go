@@ -17,7 +17,7 @@ type DynamicTemplateData struct {
 }
 
 type Abes struct {
-	UrlBusqueda      string `json:"url-busqueda" `
+	URLBusqueda      string `json:"url-busqueda" `
 	Cantidad         int    `json:"cantidad" `
 	Busqueda         string `json:"busqueda" `
 	Region           string `json:"region" `
@@ -26,20 +26,20 @@ type Abes struct {
 }
 
 type Jobs struct {
-	UrlOferta     string `json:"urlOferta" `
+	URLOferta     string `json:"urlOferta" `
 	TituloOferta  string `json:"tituloOferta" `
-	UrlEmpresa    string `json:"urlEmpresa" `
+	URLEmpresa    string `json:"urlEmpresa" `
 	NombreEmpresa string `json:"nombreEmpresa" `
 	Region        string `json:"region" `
 	Sueldo        string `json:"sueldo" `
 }
 
-type SendgridJson struct {
+type SendgridJSON struct {
 	JobID            []int              `json:"jobIds,omitempty"`
 	LoginID          string             `json:"loginId,omitempty"`
 	Personalizations []Personalizations `json:"personalizations,omitempty"`
 	Platform         string             `json:"platform,omitempty"`
-	Template_ID      string             `json:"template_id,omitempty"`
+	TemplateID       string             `json:"template_id,omitempty"`
 }
 
 type Personalizations struct {
@@ -50,7 +50,7 @@ type Personalizations struct {
 type Agents struct {
 	Agent  Agent            `json:"agent" `
 	Jobs   []SubVacantesJob `json:"jobs" `
-	SeoUrl string           `json:"seourl" `
+	SeoURL string           `json:"seourl" `
 }
 
 type Agent struct {
@@ -65,9 +65,9 @@ type Agent struct {
 	LocationState    string            `json:"location_state" `
 }
 type SubVacantesJob struct {
-	Id                  int      `json:"id" `
+	ID                  int      `json:"id" `
 	Title               string   `json:"title" `
-	Date_expires        string   `json:"date_expires" `
+	DateExpires         string   `json:"date_expires" `
 	Occejecutivo        bool     `json:"occejecutivo" `
 	Companyname         string   `json:"companyname" `
 	Companynamepretty   string   `json:"companynamepretty" `
@@ -79,9 +79,9 @@ type SubVacantesJob struct {
 	Salaryto            float32  `json:"salaryto" `
 	Salarytime          int      `json:"salarytime" `
 	Locationdescription string   `json:"locationdescription" `
-	Url                 string   `json:"url" `
+	URL                 string   `json:"url" `
 	Urlcompany          string   `json:"urlcompany" `
-	FriendlyCompanyUrl  string   `json:"friendlycompanyurl" `
+	FriendlyCompanyURL  string   `json:"friendlycompanyurl" `
 	Logo                string   `json:"logo" `
 	Jobtype             int      `json:"jobtype" `
 	Bullets             []Bullet `json:"bullets" `

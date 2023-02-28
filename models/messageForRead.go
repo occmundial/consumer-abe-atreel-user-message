@@ -10,5 +10,5 @@ type MessageForRead struct {
 	Topic         string           `json:"topic"`
 	Message       MessageToProcess `json:"message"`
 	FlatMessage   string           `json:"flatMessage"`
-	SourceMessage kafka.Message    `json:"-"`
+	SourceMessage *kafka.Message   `json:"-"`
 }

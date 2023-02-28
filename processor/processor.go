@@ -52,16 +52,16 @@ func (processor *Processor) processMessage() bool {
 	logger.LogSimpleDebug(fmt.Sprintf("process started (version: %s)", processor.Configuration.ArtifactVersion))
 	processStatus := processor.Service.ProcessMessage()
 	logger.LogSimpleDebug(fmt.Sprintf("process ended (version: %s)", processor.Configuration.ArtifactVersion))
-	logStatus(processStatus)
-	return isHealthyStatus(processStatus)
+	logStatus(&processStatus)
+	return isHealthyStatus(&processStatus)
 }
 
-func logStatus(processStatus models.ProcessStatus) {
-	isError, value := getError(processStatus.Error)
+func logStatus(processStatus *models.ProcessStatus) {
+	isError, value := deadlineExceeded(processStatus.Error)
 	logger.LogConditionalStatus(processStatus, isError, value)
 }
 
-func getError(err error) (bool, string) {
+func deadlineExceeded(err error) (isError bool, describe string) {
 	if err != nil {
 		return !errors.Is(err, context.DeadlineExceeded), err.Error()
 	}

@@ -2,17 +2,18 @@ package requests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/occmundial/consumer-abe-atreel-user-message/database"
-	"github.com/occmundial/consumer-abe-atreel-user-message/interfaces"
-	"github.com/occmundial/consumer-abe-atreel-user-message/libs"
-	"github.com/occmundial/consumer-abe-atreel-user-message/libs/logger"
 	"net/http"
 	"strings"
 
 	"github.com/occmundial/consumer-abe-atreel-user-message/constants"
+	"github.com/occmundial/consumer-abe-atreel-user-message/database"
+	"github.com/occmundial/consumer-abe-atreel-user-message/interfaces"
+	"github.com/occmundial/consumer-abe-atreel-user-message/libs"
+	"github.com/occmundial/consumer-abe-atreel-user-message/libs/logger"
 	"github.com/occmundial/consumer-abe-atreel-user-message/models"
 )
 
@@ -20,21 +21,23 @@ var (
 	urlAtreel       string
 	urlAtreelHealth string
 	stateDic        map[string]string
-	httpClient      *http.Client
 )
 
 func NewAtreel(configuration *models.Configuration, queries *database.Queries) *Atreel {
-	cs := Atreel{Configuration: configuration}
+	retryHTTPClient := libs.InitRetryHTTPClient(configuration)
+	httpClient := libs.InitHTTPClient(configuration)
+	cs := Atreel{Configuration: configuration, RetryHTTPClient: retryHTTPClient, HTTPClient: httpClient}
 	cs.init(queries)
 	return &cs
 }
 
 type Atreel struct {
-	Configuration *models.Configuration
+	Configuration   *models.Configuration
+	RetryHTTPClient *http.Client
+	HTTPClient      *http.Client
 }
 
 func (atreel Atreel) init(queries interfaces.IQuery) {
-	httpClient = libs.InitRetryHttpClient(atreel.Configuration)
 	urlAtreel = fmt.Sprintf("%s/atreel/v3/emails", strings.TrimSuffix(atreel.Configuration.APIAtreel, "/"))
 	urlAtreelHealth = fmt.Sprintf("%s/health", strings.TrimSuffix(atreel.Configuration.APIAtreel, "/"))
 	var err error
@@ -44,27 +47,28 @@ func (atreel Atreel) init(queries interfaces.IQuery) {
 	}
 }
 
-func (atreel Atreel) PostCorreo(messageFromKafka models.MessageToProcess) error {
-	jobIds, dynamicTemplateData := ConvertJsonToHtml_ABE(messageFromKafka.Recommendations, messageFromKafka.Name, stateDic, atreel.Configuration)
-	return atreel.PostCorreos(messageFromKafka.Email, messageFromKafka.LoginID, jobIds, dynamicTemplateData)
-}
-
-func (atreel Atreel) PostCorreos(correo string, loginID string, jobsIds []int, dynamicTemplateData models.DynamicTemplateData) error {
-	sendgridJson := models.SendgridJson{
-		Template_ID: constants.Template_ID,
-		JobID:       jobsIds,
-		LoginID:     loginID,
-		Platform:    constants.Platform,
+func (atreel Atreel) PostCorreo(messageFromKafka *models.MessageToProcess) error {
+	data := ConvertJSONToHTMLAbeData{messageFromKafka.Recommendations, messageFromKafka.Name, stateDic}
+	jobsIds, dynamicTemplateData := ConvertJSONToHTMLABE(&data, atreel.Configuration)
+	sendgridJSON := models.SendgridJSON{
+		TemplateID: constants.TemplateID,
+		JobID:      jobsIds,
+		LoginID:    messageFromKafka.LoginID,
+		Platform:   constants.Platform,
 		Personalizations: []models.Personalizations{{
-			To:                  []string{correo},
+			To:                  []string{messageFromKafka.Email},
 			DynamicTemplateData: dynamicTemplateData,
 		}},
 	}
-	jsonBytes, e := json.Marshal(sendgridJson)
+	jsonBytes, e := json.Marshal(sendgridJSON)
 	if e != nil {
 		return e
 	}
-	response, err := httpClient.Post(urlAtreel, constants.JSON_CONTENT_TYPE, bytes.NewBuffer(jsonBytes))
+	ctx := context.Background()
+	req2, _ := http.NewRequestWithContext(ctx, http.MethodPost, urlAtreel, bytes.NewBuffer(jsonBytes))
+	req2.Header.Set("Content-Type", constants.JSONContentType)
+	response, err := atreel.RetryHTTPClient.Do(req2)
+
 	if err != nil {
 		return err
 	}
@@ -75,10 +79,10 @@ func (atreel Atreel) PostCorreos(correo string, loginID string, jobsIds []int, d
 	return nil
 }
 
-func AtreelCheckHealth(config *models.Configuration) error {
+func AtreelCheckHealth(httpClient *http.Client) error {
 	chanAtreelHealth := make(chan string)
 	defer closeChannels(chanAtreelHealth)
-	go processHealth(urlAtreelHealth, chanAtreelHealth)
+	go processHealth(urlAtreelHealth, httpClient, chanAtreelHealth)
 	messageHealth := <-chanAtreelHealth
 	return concatErrors(messageHealth)
 }

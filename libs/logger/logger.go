@@ -2,17 +2,11 @@ package logger
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/occmundial/consumer-abe-atreel-user-message/models"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
-
-func init() {
-	zerolog.TimeFieldFormat = "2006-01-02 15:04:05"
-	log.Logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
-}
 
 func LogSimpleDebug(text string) {
 	log.Debug().Msg(text)
@@ -24,7 +18,7 @@ func LogStatusDebug(status string) {
 		Msg("")
 }
 
-func LogConditionalStatus(processStatus models.ProcessStatus, isError bool, info string) {
+func LogConditionalStatus(processStatus *models.ProcessStatus, isError bool, info string) {
 	var logConditional *zerolog.Event
 	var fieldName = "info"
 	if !isError {
@@ -33,7 +27,7 @@ func LogConditionalStatus(processStatus models.ProcessStatus, isError bool, info
 		logConditional = log.Error()
 		fieldName = "error"
 	}
-	if isMessageWithValues(processStatus.Message) {
+	if isMessageWithValues(&processStatus.Message) {
 		logConditional.
 			Str("status", processStatus.Status).
 			Str("topic", processStatus.Message.Topic).
@@ -49,7 +43,7 @@ func LogConditionalStatus(processStatus models.ProcessStatus, isError bool, info
 	}
 }
 
-func LogError(moduleName string, functionName string, errorText string) {
+func LogError(moduleName, functionName, errorText string) {
 	log.Error().
 		Str("moduleName", moduleName).
 		Str("functionName", functionName).
@@ -57,7 +51,7 @@ func LogError(moduleName string, functionName string, errorText string) {
 		Msg("")
 }
 
-func LogInfo(moduleName string, functionName string) {
+func LogInfo(moduleName, functionName string) {
 	log.Info().
 		Str("moduleName", moduleName).
 		Str("functionName", functionName).
@@ -65,7 +59,7 @@ func LogInfo(moduleName string, functionName string) {
 }
 
 // ConditionalFatal :
-func ConditionalFatal(moduleName string, functionName string, errs ...error) {
+func ConditionalFatal(moduleName, functionName string, errs ...error) {
 	text := ""
 	for _, err := range errs {
 		if err != nil {
@@ -78,12 +72,12 @@ func ConditionalFatal(moduleName string, functionName string, errs ...error) {
 }
 
 // Fatal :
-func Fatal(moduleName string, functionName string, err error) {
+func Fatal(moduleName, functionName string, err error) {
 	FatalS(moduleName, functionName, err.Error())
 }
 
 // Fatal :
-func FatalS(moduleName string, functionName string, err string) {
+func FatalS(moduleName, functionName, err string) {
 	log.Fatal().
 		Str("moduleName", moduleName).
 		Str("functionName", functionName).

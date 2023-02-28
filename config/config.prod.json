@@ -1,7 +1,7 @@
 {
     "KafkaBrokers" : ["kfk-eda-1.svc.occ", "kfk-eda-2.svc.occ", "kfk-eda-3.svc.occ"],
     "GroupID": "group-abe-atreel-consumer",
-    "Topics": ["atreel-abes-placed"],
+    "Topics": ["atreel-message-clicked-ferr"],
     "QueueRequestDelay": 3,
     "QueueTimeout": 300,
     "TxtSalary":"Salario no mostrado por compañía.",

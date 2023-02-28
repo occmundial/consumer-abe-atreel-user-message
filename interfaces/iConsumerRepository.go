@@ -8,7 +8,7 @@ import (
 type IConsumerRepository interface {
 	IsHealthProcessToStart() (bool, error)
 	GetMessage() (models.MessageForRead, error)
-	IsProcessedMessage(message models.MessageForRead) (bool, error)
-	CommitMessage(message models.MessageForRead) error
-	CreateAndSendEmail(msg models.MessageToProcess) error
+	IsProcessedMessage(message *models.MessageForRead) (bool, error)
+	CommitMessage(message *models.MessageForRead) error
+	CreateAndSendEmail(msg *models.MessageToProcess) error
 }

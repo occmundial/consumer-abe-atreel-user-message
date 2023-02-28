@@ -8,10 +8,6 @@ import (
 	"github.com/occmundial/consumer-abe-atreel-user-message/requests"
 )
 
-var (
-	stateDic map[string]string
-)
-
 // NewAtreelProcessor
 func NewAtreelProcessor(configuration *models.Configuration, queries *database.Queries, atreel *requests.Atreel) *AtreelProcessor {
 	cs := AtreelProcessor{Configuration: configuration, Atreel: atreel}
@@ -27,7 +23,6 @@ type AtreelProcessor struct {
 
 func (processor *AtreelProcessor) init(queries interfaces.IQuery) {
 	var err error
-	stateDic, err = queries.GetDicState()
 	if err != nil {
 		logger.Fatal("processAtreel", "init", err)
 	}
@@ -39,10 +34,10 @@ func IsValidMessage(message models.MessageToProcess) bool {
 }
 
 // isValidEvent: es un mensaje válido del framework de eventos
-func (processor *AtreelProcessor) CreateAndSendEmail(messageFromKafka models.MessageToProcess) error {
+func (processor *AtreelProcessor) CreateAndSendEmail(messageFromKafka *models.MessageToProcess) error {
 	return processor.sendMessage(messageFromKafka)
 }
 
-func (processor *AtreelProcessor) sendMessage(messageFromKafka models.MessageToProcess) error {
+func (processor *AtreelProcessor) sendMessage(messageFromKafka *models.MessageToProcess) error {
 	return processor.Atreel.PostCorreo(messageFromKafka)
 }

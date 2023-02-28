@@ -10,7 +10,23 @@ import (
 	"github.com/occmundial/consumer-abe-atreel-user-message/models"
 )
 
-func ConvertJsonToHtml_ABE(oAgentsResults []models.Agents, nombre string, stateDic map[string]string, config *models.Configuration) ([]int, models.DynamicTemplateData) {
+const (
+	Monday    = 1
+	Tuesday   = 2
+	Wednesday = 3
+	Thursday  = 4
+	Friday    = 5
+	Saturday  = 6
+	annual    = "Anual"
+)
+
+type ConvertJSONToHTMLAbeData struct {
+	OAgentsResults []models.Agents
+	Name           string
+	StateDic       map[string]string
+}
+
+func ConvertJSONToHTMLABE(htmlAbeData *ConvertJSONToHTMLAbeData, config *models.Configuration) ([]int, models.DynamicTemplateData) {
 	jobIds := []int{}
 	dynamicTemplateData := models.DynamicTemplateData{}
 	locationAgent := ""
@@ -19,152 +35,199 @@ func ConvertJsonToHtml_ABE(oAgentsResults []models.Agents, nombre string, stateD
 	countAgent := 0
 	countAgena := 0
 	ABEs := []models.Abes{}
-	for _, agentResult := range oAgentsResults {
-		agent := agentResult.Agent
-		jobs := agentResult.Jobs
-		encontrados := agent.JobsCount
+	for i := range htmlAbeData.OAgentsResults {
 		urlCompany := ""
-		if encontrados > 0 {
-			countAgent = encontrados
-			urlResultados := agentResult.SeoUrl
-			nameAgent := agent.NameAgent
-			if agent.LocationCity != "" {
-				if agent.LocationCity == constants.YZonaMetro {
-					locationAgent = agent.LocationState + " " + agent.LocationCity
-				} else {
-					locationAgent = agent.LocationCity
-				}
-			} else if agent.LocationState != "" {
-				locationAgent = stateDic[agent.LocationState]
-				if locationAgent == "" {
-					locationAgent = constants.MEXICO
-				}
-			} else {
-				locationAgent = constants.MEXICO
-			}
+		if htmlAbeData.OAgentsResults[i].Agent.JobsCount > 0 {
+			countAgent = htmlAbeData.OAgentsResults[i].Agent.JobsCount
+			SearchURL := htmlAbeData.OAgentsResults[i].SeoURL
+			nameAgent := htmlAbeData.OAgentsResults[i].Agent.NameAgent
+			locationAgent = getLocationAgent(&htmlAbeData.OAgentsResults[i].Agent)
 			if countAgent >= countAgena {
 				countAgena = countAgent
 				locationAgena = locationAgent
 				nameAgenta = nameAgent
 			}
 			dataAbe := models.Abes{}
-			dataAbe.UrlBusqueda = urlResultados
-			dataAbe.Cantidad = encontrados
-			dataAbe.Busqueda = agent.NameAgent
-			dataAbe.Region = agent.Location
-			dataAbe.FechaCreacionABE = agent.FechaCreacionABE
+			dataAbe.URLBusqueda = SearchURL
+			dataAbe.Cantidad = htmlAbeData.OAgentsResults[i].Agent.JobsCount
+			dataAbe.Busqueda = htmlAbeData.OAgentsResults[i].Agent.NameAgent
+			dataAbe.Region = htmlAbeData.OAgentsResults[i].Agent.Location
+			dataAbe.FechaCreacionABE = htmlAbeData.OAgentsResults[i].Agent.FechaCreacionABE
 			dataJobs := []models.Jobs{}
-			for _, job := range jobs {
-				jobIds = append(jobIds, job.Id)
-				urlCompany = config.Occ + "/" + job.FriendlyCompanyUrl + strings.Replace(config.ABE_UTM_EMPRESA, `|idHtml|`, constants.HtmlDefault, -1) + job.Companynamepretty
-				jobData := models.Jobs{}
-				jobData.UrlEmpresa = urlCompany
-				jobData.TituloOferta = job.Title
-				jobData.UrlOferta = job.Url
-				jobData.NombreEmpresa = job.Companyname
-				jobData.Region = job.Locationdescription
-				if job.Showsalary {
-					ac := accounting.Accounting{Symbol: "$", Precision: 2}
-					jobData.Sueldo = ac.FormatMoney(job.Salaryfrom) + " - " + ac.FormatMoney(job.Salaryto) + " " + getLookup(job.Salarytime)
-				} else {
-					jobData.Sueldo = config.TxtSalary
-				}
-				dataJobs = append(dataJobs, jobData)
+			for j := range htmlAbeData.OAgentsResults[i].Jobs {
+				jobIds = append(jobIds, htmlAbeData.OAgentsResults[i].Jobs[j].ID)
+				params := strings.ReplaceAll(config.AbeUtmEmpresa, `|idHtml|`, constants.HTMLDefault)
+				url := htmlAbeData.OAgentsResults[i].Jobs[j].FriendlyCompanyURL
+				companyNamePretty := htmlAbeData.OAgentsResults[i].Jobs[j].Companynamepretty
+				urlCompany = config.Occ + "/" + url + params + companyNamePretty
+				dataJobs = append(dataJobs, getJobData(&htmlAbeData.OAgentsResults[i].Jobs[j], config, urlCompany))
 			}
 			dataAbe.Jobs = dataJobs
 			ABEs = append(ABEs, dataAbe)
 		}
 	}
 	dynamicTemplateData.Abes = ABEs
-	dynamicTemplateData.Nombre = getFirstName(nombre)
+	dynamicTemplateData.Nombre = getFirstName(htmlAbeData.Name)
 	if countAgent > 0 {
-		subjectPush := getSubjectByDay(nameAgenta, strconv.Itoa(countAgena), locationAgena, int(time.Now().Weekday()))
+		subjectPush := getSubjectByDay(SubjectData{nameAgenta, strconv.Itoa(countAgena), locationAgena, int(time.Now().Weekday())})
 		dynamicTemplateData.Subject = subjectPush
 	}
 	return jobIds, dynamicTemplateData
 }
 
-func getSubjectByDay(nombre string, cantidad string, localidad string, intWeekday int) string {
-	switch intWeekday {
-	case 1:
-		if nombre != "" {
-			nombre = " de " + nombre
-		}
-		complemento := "Nuevos "
-		emp := " empleos"
-		if cantidad == "1" {
-			complemento = "Nuevo "
-			emp = "empleo"
-			cantidad = ""
-		}
-		if localidad != "" {
-			localidad = " en " + localidad
-		}
-		return complemento + cantidad + emp + localidad + nombre
-	case 2:
-		if nombre != "" {
-			nombre = "de " + nombre
-		}
-		complemento := " empleos nuevos "
-		if cantidad == "1" {
-			complemento = " empleo nuevo "
-		}
-		if localidad != "" {
-			localidad = "En " + localidad + " "
-		}
-		return localidad + "hay " + cantidad + complemento + nombre
-	case 3:
-		complemento := " empleos nuevos"
-		if cantidad == "1" {
-			complemento = " empleo nuevo"
-		}
-		if nombre != "" && localidad != "" {
-			localidad = " en " + localidad
-		}
-		return nombre + localidad + " ¡" + cantidad + complemento + "!"
-	case 4:
-		if nombre != "" {
-			nombre = "de " + nombre
-		}
-		complemento := " vacantes nuevas "
-		if cantidad == "1" {
-			complemento = " vacante nueva "
-		}
-		if localidad != "" {
-			localidad = localidad + " tiene "
-		}
-		return localidad + cantidad + complemento + nombre
-	case 5:
-		complemento := " vacantes perfectas "
-		if cantidad == "1" {
-			complemento = " vacante perfecta "
-		}
-		if localidad != "" {
-			localidad = " en " + localidad
-		}
-		return "Hay " + cantidad + complemento + "para ti" + localidad
-	case 6:
-		if nombre != "" {
-			nombre = " de " + nombre
-		}
-		complemento := " nuevos empleos"
-		if cantidad == "1" {
-			complemento = " nuevo empleo"
-		}
-		if localidad != "" {
-			localidad = " en " + localidad
-		}
-		return cantidad + complemento + localidad + nombre
-	default:
-		complemento := " vacantes nuevas"
-		if cantidad == "1" {
-			complemento = " vacante nueva"
-		}
-		if localidad != "" {
-			localidad = " en " + localidad
-		}
-		return "¡" + cantidad + complemento + "! " + nombre + localidad
+func getJobData(jobs *models.SubVacantesJob, config *models.Configuration, urlCompany string) models.Jobs {
+	jobData := models.Jobs{}
+	jobData.URLEmpresa = urlCompany
+	jobData.TituloOferta = jobs.Title
+	jobData.URLOferta = jobs.URL
+	jobData.NombreEmpresa = jobs.Companyname
+	jobData.Region = jobs.Locationdescription
+	if jobs.Showsalary {
+		ac := accounting.Accounting{Symbol: "$", Precision: 2}
+		salaryFrom := ac.FormatMoney(jobs.Salaryfrom)
+		salaryTo := ac.FormatMoney(jobs.Salaryto)
+		jobData.Sueldo = salaryFrom + " - " + salaryTo + " " + getLookup(jobs.Salarytime)
+	} else {
+		jobData.Sueldo = config.TxtSalary
 	}
+	return jobData
+}
+
+func getLocationAgent(agent *models.Agent) string {
+	if agent.LocationCity != "" {
+		if agent.LocationCity == constants.YZonaMetro {
+			return agent.LocationState + " " + agent.LocationCity
+		} else {
+			return agent.LocationCity
+		}
+	} else if agent.LocationState != "" {
+		var locationAgent = stateDic[agent.LocationState]
+		if locationAgent == "" {
+			return constants.MEXICO
+		} else {
+			return locationAgent
+		}
+	} else {
+		return constants.MEXICO
+	}
+}
+
+type SubjectData struct {
+	nombre     string
+	cantidad   string
+	localidad  string
+	intWeekday int
+}
+
+func getSubjectByDay(subjectData SubjectData) string {
+	switch subjectData.intWeekday {
+	case Monday:
+		return getMondySubject(subjectData)
+	case Tuesday:
+		return getTuesdyaSubject(subjectData)
+	case Wednesday:
+		return getWednesdaySubject(subjectData)
+	case Thursday:
+		return getThurdaySubject(subjectData)
+	case Friday:
+		return getFridaySubject(subjectData)
+	case Saturday:
+		return getSaturdaySubject(subjectData)
+	default:
+		return getDefaultSubject(subjectData)
+	}
+}
+
+func getMondySubject(subjectData SubjectData) string {
+	if subjectData.nombre != "" {
+		subjectData.nombre = " de " + subjectData.nombre
+	}
+	complemento := "Nuevos "
+	emp := " empleos"
+	if subjectData.cantidad == "1" {
+		complemento = "Nuevo "
+		emp = "empleo"
+		subjectData.cantidad = ""
+	}
+	if subjectData.localidad != "" {
+		subjectData.localidad = " en " + subjectData.localidad
+	}
+	return complemento + subjectData.cantidad + emp + subjectData.localidad + subjectData.nombre
+}
+
+func getTuesdyaSubject(subjectData SubjectData) string {
+	if subjectData.nombre != "" {
+		subjectData.nombre = "de " + subjectData.nombre
+	}
+	complemento := " empleos nuevos "
+	if subjectData.cantidad == "1" {
+		complemento = " empleo nuevo "
+	}
+	if subjectData.localidad != "" {
+		subjectData.localidad = "En " + subjectData.localidad + " "
+	}
+	return subjectData.localidad + "hay " + subjectData.cantidad + complemento + subjectData.nombre
+}
+
+func getWednesdaySubject(subjectData SubjectData) string {
+	complemento := " empleos nuevos"
+	if subjectData.cantidad == "1" {
+		complemento = " empleo nuevo"
+	}
+	if subjectData.nombre != "" && subjectData.localidad != "" {
+		subjectData.localidad = " en " + subjectData.localidad
+	}
+	return subjectData.nombre + subjectData.localidad + " ¡" + subjectData.cantidad + complemento + "!"
+}
+
+func getThurdaySubject(subjectData SubjectData) string {
+	if subjectData.nombre != "" {
+		subjectData.nombre = "de " + subjectData.nombre
+	}
+	complemento := " vacantes nuevas "
+	if subjectData.cantidad == "1" {
+		complemento = " vacante nueva "
+	}
+	if subjectData.localidad != "" {
+		subjectData.localidad += " tiene "
+	}
+	return subjectData.localidad + subjectData.cantidad + complemento + subjectData.nombre
+}
+
+func getFridaySubject(subjectData SubjectData) string {
+	complemento := " vacantes perfectas "
+	if subjectData.cantidad == "1" {
+		complemento = " vacante perfecta "
+	}
+	if subjectData.localidad != "" {
+		subjectData.localidad = " en " + subjectData.localidad
+	}
+	return "Hay " + subjectData.cantidad + complemento + "para ti" + subjectData.localidad
+}
+
+func getSaturdaySubject(subjectData SubjectData) string {
+	if subjectData.nombre != "" {
+		subjectData.nombre = " de " + subjectData.nombre
+	}
+	complemento := " nuevos empleos"
+	if subjectData.cantidad == "1" {
+		complemento = " nuevo empleo"
+	}
+	if subjectData.localidad != "" {
+		subjectData.localidad = " en " + subjectData.localidad
+	}
+	return subjectData.cantidad + complemento + subjectData.localidad + subjectData.nombre
+}
+
+func getDefaultSubject(subjectData SubjectData) string {
+	complemento := " vacantes nuevas"
+	if subjectData.cantidad == "1" {
+		complemento = " vacante nueva"
+	}
+	if subjectData.localidad != "" {
+		subjectData.localidad = " en " + subjectData.localidad
+	}
+	return "¡" + subjectData.cantidad + complemento + "! " + subjectData.nombre + subjectData.localidad
 }
 
 func getLookup(salarytime int) string {
@@ -174,7 +237,7 @@ func getLookup(salarytime int) string {
 	case 2:
 		return "Semanal"
 	case 3:
-		return "Anual"
+		return annual
 	default:
 		return "Mensual"
 	}

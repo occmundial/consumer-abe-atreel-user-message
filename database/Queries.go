@@ -39,8 +39,8 @@ func (queries *Queries) GetDicState() (map[string]string, error) {
 	var states = make(map[string]string)
 	for rows.Next() {
 		var state = models.State{}
-		if err = rows.Scan(&state.StateID, &state.StateName); err != nil {
-			return states, err
+		if scanErr := rows.Scan(&state.StateID, &state.StateName); scanErr != nil {
+			return states, scanErr
 		}
 		states[state.StateID] = state.StateName
 	}
