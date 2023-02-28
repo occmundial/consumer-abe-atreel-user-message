@@ -1,7 +1,7 @@
 {
     "KafkaBrokers" : ["b-1.kafkaeventdriven.a5r262.c5.kafka.us-west-2.amazonaws.com:9092", "b-3.kafkaeventdriven.a5r262.c5.kafka.us-west-2.amazonaws.com:9092", "b-2.kafkaeventdriven.a5r262.c5.kafka.us-west-2.amazonaws.com:9092"],
     "GroupID": "group-abe-atreel-consumer",
-    "Topics": ["atreel-abe-placed-fer"],
+    "Topics": ["atreel-message-clicked-ferr"],
     "QueueRequestDelay": 3,
     "QueueTimeout": 300,
     "TxtSalary":"Salario no mostrado por compañía.",
