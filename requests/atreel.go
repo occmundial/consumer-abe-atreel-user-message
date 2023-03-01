@@ -20,6 +20,7 @@ var (
 	urlAtreel       string
 	urlAtreelHealth string
 	stateDic        map[string]string
+	retryHttpClient *http.Client
 	httpClient      *http.Client
 )
 
@@ -34,7 +35,8 @@ type Atreel struct {
 }
 
 func (atreel Atreel) init(queries interfaces.IQuery) {
-	httpClient = libs.InitRetryHttpClient(atreel.Configuration)
+	retryHttpClient = libs.InitRetryHttpClient(atreel.Configuration)
+	httpClient = libs.InitHttpClient(atreel.Configuration)
 	urlAtreel = fmt.Sprintf("%s/atreel/v3/emails", strings.TrimSuffix(atreel.Configuration.APIAtreel, "/"))
 	urlAtreelHealth = fmt.Sprintf("%s/health", strings.TrimSuffix(atreel.Configuration.APIAtreel, "/"))
 	var err error
@@ -45,18 +47,14 @@ func (atreel Atreel) init(queries interfaces.IQuery) {
 }
 
 func (atreel Atreel) PostCorreo(messageFromKafka models.MessageToProcess) error {
-	jobIds, dynamicTemplateData := ConvertJsonToHtml_ABE(messageFromKafka.Recommendations, messageFromKafka.Name, stateDic, atreel.Configuration)
-	return atreel.PostCorreos(messageFromKafka.Email, messageFromKafka.LoginID, jobIds, dynamicTemplateData)
-}
-
-func (atreel Atreel) PostCorreos(correo string, loginID string, jobsIds []int, dynamicTemplateData models.DynamicTemplateData) error {
+	jobsIds, dynamicTemplateData := ConvertJsonToHtml_ABE(messageFromKafka.Recommendations, messageFromKafka.Name, stateDic, atreel.Configuration)
 	sendgridJson := models.SendgridJson{
 		Template_ID: constants.Template_ID,
 		JobID:       jobsIds,
-		LoginID:     loginID,
+		LoginID:     messageFromKafka.LoginID,
 		Platform:    constants.Platform,
 		Personalizations: []models.Personalizations{{
-			To:                  []string{correo},
+			To:                  []string{messageFromKafka.Email},
 			DynamicTemplateData: dynamicTemplateData,
 		}},
 	}
@@ -64,7 +62,7 @@ func (atreel Atreel) PostCorreos(correo string, loginID string, jobsIds []int, d
 	if e != nil {
 		return e
 	}
-	response, err := httpClient.Post(urlAtreel, constants.JSON_CONTENT_TYPE, bytes.NewBuffer(jsonBytes))
+	response, err := retryHttpClient.Post(urlAtreel, constants.JSON_CONTENT_TYPE, bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return err
 	}
