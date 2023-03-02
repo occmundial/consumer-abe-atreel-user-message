@@ -72,10 +72,10 @@ func (atreel Atreel) PostCorreo(messageFromKafka *models.MessageToProcess) error
 	if err != nil {
 		return err
 	}
+	response.Body.Close()
 	if response.StatusCode != http.StatusCreated {
 		return errors.New("invalid status code")
 	}
-	response.Body.Close()
 	return nil
 }
 
