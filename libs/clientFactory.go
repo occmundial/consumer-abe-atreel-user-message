@@ -21,7 +21,6 @@ func InitRetryHTTPClient(config *models.Configuration) *http.Client {
 	return client.StandardClient()
 }
 
-
 func InitHTTPClient(config *models.Configuration) *http.Client {
 
 	return &http.Client{
