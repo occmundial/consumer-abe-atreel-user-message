@@ -21,8 +21,9 @@ func InitRetryHTTPClient(config *models.Configuration) *http.Client {
 	return client.StandardClient()
 }
 
-// InitHTTPClient :
+
 func InitHTTPClient(config *models.Configuration) *http.Client {
+
 	return &http.Client{
 		Timeout: time.Second * time.Duration(config.APITimeout),
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
