@@ -9,7 +9,7 @@ import (
 )
 
 // NewConsumerService : Factory que crea un "ConsumerService"
-func NewConsumerService(repository repositories.ConsumerRepository) *ConsumerService {
+func NewConsumerService(repository *repositories.ConsumerRepository) *ConsumerService {
 	return &ConsumerService{
 		repository,
 	}
