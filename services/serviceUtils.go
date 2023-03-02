@@ -7,6 +7,6 @@ import (
 )
 
 // isValidEvent: es un mensaje válido del framework de eventos
-func isValidEvent(message models.MessageForRead) bool {
+func isValidEvent(message *models.MessageForRead) bool {
 	return len(strings.TrimSpace(message.Key)) > 0
 }

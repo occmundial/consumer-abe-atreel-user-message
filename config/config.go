@@ -69,7 +69,7 @@ func validateEnvironment() {
 
 func isValidEnvironment(keys ...string) bool {
 	for _, key := range keys {
-		if len(strings.TrimSpace(os.Getenv(key))) == 0 {
+		if strings.TrimSpace(os.Getenv(key)) == "" {
 			return false
 		}
 	}

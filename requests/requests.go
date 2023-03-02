@@ -2,19 +2,21 @@ package requests
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/occmundial/consumer-abe-atreel-user-message/interfaces"
+	"github.com/occmundial/consumer-abe-atreel-user-message/libs"
+	"github.com/occmundial/consumer-abe-atreel-user-message/models"
 )
 
-func NewRequests() *Requests {
-	return &Requests{}
+func NewRequests(configuration *models.Configuration) *Requests {
+	return &Requests{HTTPClient: libs.InitHTTPClient(configuration)}
 }
 
 type Requests struct {
+	HTTPClient *http.Client
 }
 
 func (requests Requests) SendRequestAndBody(r interfaces.RequestData) (*http.Response, []byte, error) {
@@ -22,7 +24,7 @@ func (requests Requests) SendRequestAndBody(r interfaces.RequestData) (*http.Res
 	if headers == nil {
 		headers = make(http.Header)
 	}
-	url, err := url.Parse(r.Url)
+	parsedURL, err := url.Parse(r.URL)
 	if err != nil {
 		return nil, []byte{}, err
 	}
@@ -30,7 +32,7 @@ func (requests Requests) SendRequestAndBody(r interfaces.RequestData) (*http.Res
 	request.Header = headers
 	request.Header.Add("Content-Type", r.ContentType)
 	request.Method = r.Method
-	request.URL = url
+	request.URL = parsedURL
 	if r.Data != "" {
 		stringReader := strings.NewReader(r.Data)
 		request.Body = io.NopCloser(stringReader)
@@ -45,17 +47,17 @@ func (requests Requests) SendRequestAndBody(r interfaces.RequestData) (*http.Res
 
 func getBody(response *http.Response) ([]byte, error) {
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return []byte{}, err
 	}
 	return body, nil
 }
 
-func (request Requests) CheckHealth(urlRequest string) error {
+func (requests Requests) CheckHealth(urlRequest string) error {
 	chanRequestHealth := make(chan string)
 	defer closeChannels(chanRequestHealth)
-	go processHealth(urlRequest, chanRequestHealth)
+	go processHealth(urlRequest, requests.HTTPClient, chanRequestHealth)
 	messageHealth := <-chanRequestHealth
 	return concatErrors(messageHealth)
 }

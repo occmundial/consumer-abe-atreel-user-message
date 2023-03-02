@@ -1,33 +1,25 @@
 package requests
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // processHealth : regresa el statusCode del endpoint de salud
-func processHealth(urlAPI string, chanErrorMsg chan string) {
-	response, err := httpClient.Get(urlAPI)
+func processHealth(urlAPI string, httpClient *http.Client, chanErrorMsg chan string) {
+	ctx := context.Background()
+	req2, _ := http.NewRequestWithContext(ctx, http.MethodGet, urlAPI, http.NoBody)
+	response, err := httpClient.Do(req2)
+	response.Body.Close()
 	if err != nil {
 		chanErrorMsg <- fmt.Sprintf("Service Unavailable -> %s", err.Error())
 	} else if response.StatusCode != http.StatusOK {
 		chanErrorMsg <- fmt.Sprintf("Service Unavailable -> %s", urlAPI)
 	} else {
 		chanErrorMsg <- ""
-	}
-}
-
-func pingHealth(urlAPI string, chanErrorMsg chan string, timeout int) {
-	host := strings.Split(urlAPI, "//")
-	_, err := net.DialTimeout("tcp", host[1], time.Duration(timeout)*time.Second)
-	if err == nil {
-		chanErrorMsg <- ""
-	} else {
-		chanErrorMsg <- fmt.Sprintf("Service Unavailable -> %s", err.Error())
 	}
 }
 

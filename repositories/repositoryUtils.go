@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -26,7 +27,7 @@ func getKafkaReader(config *models.Configuration) *kafka.Reader {
 	})
 }
 
-func kafkaMessageToMessageForRead(kafkaMessage kafka.Message) (models.MessageForRead, error) {
+func kafkaMessageToMessageForRead(kafkaMessage *kafka.Message) (models.MessageForRead, error) {
 	message, err := deserializeMessage(kafkaMessage.Value)
 	if err != nil {
 		return models.MessageForRead{}, err
@@ -47,8 +48,8 @@ func deserializeMessage(flatMessage []byte) (models.MessageToProcess, error) {
 }
 
 // processHealth : regresa el statusCode del endpoint de salud
-func processHealth(chanErrorMsg chan string, config *models.Configuration, queries interfaces.IQuery) {
-	atreelError := requests.AtreelCheckHealth(config)
+func processHealth(chanErrorMsg chan string, httpClient *http.Client, queries interfaces.IQuery) {
+	atreelError := requests.AtreelCheckHealth(httpClient)
 	dbError := queries.CheckHealth()
 	chanErrorMsg <- getError(atreelError, dbError)
 }

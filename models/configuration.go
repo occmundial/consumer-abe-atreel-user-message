@@ -10,11 +10,11 @@ type Configuration struct {
 	ArtifactVersion   string `env:"VERSION"`
 
 	// Dependencies
-	TxtSalary       string
-	Occ             string
-	ABE_UTM_EMPRESA string
+	TxtSalary     string
+	Occ           string
+	AbeUtmEmpresa string
 
-	//APIs
+	// APIs
 	RetryWaitMin int
 	RetryWaitMax int
 	RetryMax     int

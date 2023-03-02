@@ -9,9 +9,9 @@ import (
 )
 
 // NewConsumerService : Factory que crea un "ConsumerService"
-func NewConsumerService(repository *repositories.ConsumerRepository) *ConsumerService {
+func NewConsumerService(repository repositories.ConsumerRepository) *ConsumerService {
 	return &ConsumerService{
-		Repository: repository,
+		repository,
 	}
 }
 
@@ -35,14 +35,14 @@ func (service *ConsumerService) ProcessMessage() models.ProcessStatus {
 
 	message, err := service.Repository.GetMessage()
 	if err == nil {
-		if valid, status, err = service.isValidMessage(message); valid {
-			status, err = service.processAndCommitMessage(message)
+		if valid, status, err = service.isValidMessage(&message); valid {
+			status, err = service.processAndCommitMessage(&message)
 			return models.ProcessStatus{Status: status, Message: message, Error: err}
 		}
 	} else {
 		status = constants.StatusReadMessageError
 	}
-	go service.commitUnProccessMessage(message, status)
+	go service.commitUnProccessMessage(&message, status)
 	return models.ProcessStatus{Status: status, Message: message, Error: err}
 }
 
@@ -50,7 +50,7 @@ func (service *ConsumerService) ProcessMessage() models.ProcessStatus {
 // valid  => mensaje válido(true)/inválido(false)
 // status => status para mensaje válido y procesado
 // error  => error de procesamiento
-func (service *ConsumerService) isValidMessage(message models.MessageForRead) (bool, string, error) {
+func (service *ConsumerService) isValidMessage(message *models.MessageForRead) (isValid bool, status string, err error) {
 	if !sendgrid.IsValidMessage(message.Message) {
 		return false, constants.StatusAlreadyProcessed, nil
 	}
@@ -66,7 +66,7 @@ func (service *ConsumerService) isValidMessage(message models.MessageForRead) (b
 	return true, "", nil
 }
 
-func (service *ConsumerService) processAndCommitMessage(message models.MessageForRead) (string, error) {
+func (service *ConsumerService) processAndCommitMessage(message *models.MessageForRead) (string, error) {
 	status := ""
 	err := service.processMessage(message)
 	if err == nil {
@@ -85,11 +85,11 @@ func (service *ConsumerService) processAndCommitMessage(message models.MessageFo
 	return status, err
 }
 
-func (service *ConsumerService) processMessage(message models.MessageForRead) error {
-	return service.Repository.CreateAndSendEmail(message.Message)
+func (service *ConsumerService) processMessage(message *models.MessageForRead) error {
+	return service.Repository.CreateAndSendEmail(&message.Message)
 }
 
-func (service *ConsumerService) commitUnProccessMessage(message models.MessageForRead, status string) {
+func (service *ConsumerService) commitUnProccessMessage(message *models.MessageForRead, status string) {
 	// es un evento válido de kafka Y
 	// 		(se pudo leer el mensaje pero no se pudo deserializar O
 	// 		es un mensaje inválido para lógica de negocio O
@@ -97,6 +97,6 @@ func (service *ConsumerService) commitUnProccessMessage(message models.MessageFo
 	// => ya no se necesita procesar entonces lo damos como procesado
 	if isValidEvent(message) && (status == constants.StatusReadMessageError ||
 		status == constants.StatusInvalidMessage || status == constants.StatusAlreadyProcessed) {
-		service.Repository.CommitMessage(message)
+		_ = service.Repository.CommitMessage(message)
 	}
 }

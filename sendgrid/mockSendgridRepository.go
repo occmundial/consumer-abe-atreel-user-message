@@ -9,17 +9,17 @@ type mockSendgridRepository struct {
 	mock.Mock
 }
 
-func (mock *mockSendgridRepository) GetDicState() (map[string]string, error) {
-	args := mock.Called()
+func (mockSR *mockSendgridRepository) GetDicState() (map[string]string, error) {
+	args := mockSR.Called()
 	return args.Get(0).(map[string]string), args.Error(1)
 }
 
-func (mock *mockSendgridRepository) CheckHealth() error {
-	args := mock.Called()
+func (mockSR *mockSendgridRepository) CheckHealth() error {
+	args := mockSR.Called()
 	return args.Error(0)
 }
 
-func (mock *mockSendgridRepository) PostCorreo(messageFromKafka models.MessageToProcess) error {
-	args := mock.Called()
+func (mockSR *mockSendgridRepository) PostCorreo(messageFromKafka *models.MessageToProcess) error {
+	args := mockSR.Called()
 	return args.Error(0)
 }

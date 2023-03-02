@@ -19,10 +19,10 @@ const (
 	// LimitReader : cantidad máxima de bytes a leer del body del response
 	LimitReader = 1048576
 
-	HtmlDefault       = "1"
-	YZonaMetro        = "Y Zona Metro."
-	MEXICO            = "México"
-	Template_ID       = "d-1488308ecee24468b2f83c52bbeadf11"
-	Platform          = "ABE"
-	JSON_CONTENT_TYPE = "application/json"
+	HTMLDefault     = "1"
+	YZonaMetro      = "Y Zona Metro."
+	MEXICO          = "México"
+	TemplateID      = "d-1488308ecee24468b2f83c52bbeadf11"
+	Platform        = "ABE"
+	JSONContentType = "application/json"
 )

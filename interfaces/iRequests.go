@@ -7,7 +7,7 @@ type IRequests interface {
 }
 
 type RequestData struct {
-	Url         string
+	URL         string
 	Headers     map[string][]string
 	Method      string
 	ContentType string

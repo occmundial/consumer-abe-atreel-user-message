@@ -39,7 +39,7 @@ func Test_CreateAndSendEmail_OK(t *testing.T) {
 	mockRepository.On("PostCorreo", mock.Anything).Return(nil)
 	processor := AtreelProcessor{Configuration: &config, Atreel: mockRepository}
 	processor.init(mockRepository)
-	err := processor.CreateAndSendEmail(messageToProcess)
+	err := processor.CreateAndSendEmail(&messageToProcess)
 	assert.NoError(t, err)
 }
 
@@ -50,7 +50,7 @@ func Test_CreateAndSendEmail_Fail(t *testing.T) {
 	mockRepository.On("PostCorreo", mock.Anything).Return(fakeError)
 	processor := AtreelProcessor{Configuration: &config, Atreel: mockRepository}
 	processor.init(mockRepository)
-	err := processor.CreateAndSendEmail(messageToProcess)
+	err := processor.CreateAndSendEmail(&messageToProcess)
 	assert.Error(t, err)
 	assert.Equal(t, fakeError, err)
 }
