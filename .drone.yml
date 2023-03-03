@@ -43,11 +43,11 @@ steps:
     - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
     - cp kustomize /usr/local/bin/kustomize
     - git clone -b main https://github.com/occmundial/gitops-occ.git
-    - cd gitops-occ/SharedServices/services/consumer-abe-atreel-user-message/overlays/development
+    - cd gitops-occ/Atreel/consumer-abe-atreel-user-message/overlays/development
     - /usr/local/bin/kustomize edit set image occmundial/consumer-abe-atreel-user-message:${DRONE_COMMIT_SHA:0:8}
     - git config --local user.name "Drone"
     - git config --local user.email "devops@occ.com.mx"
-    - git commit -a -m " SharedServices/services/consumer-abe-atreel-user-message new version ${DRONE_COMMIT_SHA:08}"
+    - git commit -a -m " Atreel/consumer-abe-atreel-user-message new version ${DRONE_COMMIT_SHA:08}"
     - git push origin main
 trigger:
   branch:
@@ -82,11 +82,11 @@ steps:
     - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
     - cp kustomize /usr/local/bin/kustomize
     - git clone -b main https://github.com/occmundial/gitops-occ.git
-    - cd gitops-occ/SharedServices/services/consumer-abe-atreel-user-message/overlays/production
+    - cd gitops-occ/Atreel/consumer-abe-atreel-user-message/overlays/production
     - /usr/local/bin/kustomize edit set image occmundial/consumer-abe-atreel-user-message:${DRONE_COMMIT_SHA:0:8}
     - git config --local user.name "Drone"
     - git config --local user.email "devops@occ.com.mx"
-    - git commit -a -m " SharedServices/services/consumer-abe-atreel-user-message new version ${DRONE_COMMIT_SHA:08}"
+    - git commit -a -m " Atreel/consumer-abe-atreel-user-message new version ${DRONE_COMMIT_SHA:08}"
     - git push origin main 
 
 trigger:
