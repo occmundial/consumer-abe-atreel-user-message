@@ -17,7 +17,6 @@ const (
 	Thursday  = 4
 	Friday    = 5
 	Saturday  = 6
-	annual    = "Anual"
 )
 
 type ConvertJSONToHTMLAbeData struct {
@@ -237,7 +236,7 @@ func getLookup(salarytime int) string {
 	case 2:
 		return "Semanal"
 	case 3:
-		return annual
+		return "Anual"
 	default:
 		return "Mensual"
 	}
