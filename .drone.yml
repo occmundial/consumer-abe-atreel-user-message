@@ -78,6 +78,7 @@ steps:
       - git config --local user.email "devops@occ.com.mx"
       - git commit -a -m " Atreel/consumer-abe-atreel-user-message new version ${DRONE_COMMIT_SHA:0:8}"
       - git push origin main
+      
 trigger:
   branch:
     - development
