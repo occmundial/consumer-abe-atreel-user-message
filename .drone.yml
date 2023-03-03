@@ -22,20 +22,19 @@ kind: pipeline
 type: docker
 name: development
 steps:
-- name: build
-  image: plugins/docker
-  settings:
-    repo: occmundial/consumer-abe-atreel-user-message
-    tags: ${DRONE_COMMIT_SHA:0:8}
-    username:
-      from_secret: docker_devops_user
-    password:
-      from_secret: docker_devops_password
-    dockerfile: Dockerfile
-    build_args:
-      - ENV=dev
-      - VERSION=${DRONE_COMMIT_SHA:0:8}
-
+  - name: build
+    image: plugins/docker
+    settings:
+      repo: occmundial/consumer-abe-atreel-user-message
+      tags: ${DRONE_COMMIT_SHA:0:8}
+      username:
+        from_secret: docker_devops_user
+      password:
+        from_secret: docker_devops_password
+      dockerfile: Dockerfile
+      build_args:
+        - ENV=dev
+        - VERSION=${DRONE_COMMIT_SHA:0:8}
 
   - name: push to gitops
     image: alpine/git
@@ -62,33 +61,33 @@ kind: pipeline
 type: kubernetes
 name: production
 steps:
-  - name: build
-    image: plugins/docker
-    settings:
-      repo: occmundial/consumer-abe-atreel-user-message
-      tags: ${DRONE_COMMIT_SHA:0:8}
-      username:
-        from_secret: docker_devops_user
-      password:
-        from_secret: docker_devops_password
-      dockerfile: Dockerfile
-      build_args:
-        - env=prod
-        - version=${DRONE_COMMIT_SHA:0:8}
+- name: build
+  image: plugins/docker
+  settings:
+    repo: occmundial/consumer-abe-atreel-user-message
+    tags: ${DRONE_COMMIT_SHA:0:8}
+    username:
+      from_secret: docker_devops_user
+    password:
+      from_secret: docker_devops_password
+    dockerfile: Dockerfile
+    build_args:
+      - env=prod
+      - version=${DRONE_COMMIT_SHA:0:8}
 
-  - name: push consumer-abe-atreel-user-message to gitops
-    image: alpine/git
-    commands:
-      - apk update && apk --no-cache add bash curl
-      - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
-      - cp kustomize /usr/local/bin/kustomize
-      - git clone -b main https://github.com/occmundial/gitops-occ.git
-      - cd gitops-occ/Atreel/consumer-abe-atreel-user-message/overlays/production
-      - /usr/local/bin/kustomize edit set image occmundial/consumer-abe-atreel-user-message:${DRONE_COMMIT_SHA:0:8}
-      - git config --local user.name "Drone"
-      - git config --local user.email "devops@occ.com.mx"
-      - git commit -a -m " Atreel/consumer-abe-atreel-user-message new version ${DRONE_COMMIT_SHA:08}"
-      - git push origin main 
+- name: push consumer-abe-atreel-user-message to gitops
+  image: alpine/git
+  commands:
+    - apk update && apk --no-cache add bash curl
+    - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+    - cp kustomize /usr/local/bin/kustomize
+    - git clone -b main https://github.com/occmundial/gitops-occ.git
+    - cd gitops-occ/Atreel/consumer-abe-atreel-user-message/overlays/production
+    - /usr/local/bin/kustomize edit set image occmundial/consumer-abe-atreel-user-message:${DRONE_COMMIT_SHA:0:8}
+    - git config --local user.name "Drone"
+    - git config --local user.email "devops@occ.com.mx"
+    - git commit -a -m " Atreel/consumer-abe-atreel-user-message new version ${DRONE_COMMIT_SHA:08}"
+    - git push origin main 
 
 trigger:
   branch:
