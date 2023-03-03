@@ -194,7 +194,7 @@ func Test_ConvertJsonToHtml_ABE_Without_SubVacantesJob_Queretaro_OK(t *testing.T
 	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic}, &configuration)
 	assert.Equal(t, 0, len(jobIds))
 	assert.Equal(t, nombre, dynamicTemplateData.Nombre)
-	assert.True(t, strings.Contains(dynamicTemplateData.Subject, "gerente de recursos humanos"), dynamicTemplateData.Subject)
+	assert.True(t, strings.Contains(dynamicTemplateData.Subject, "Querétaro"), dynamicTemplateData.Subject)
 	assert.Equal(t, 1, len(dynamicTemplateData.Abes))
 }
 
