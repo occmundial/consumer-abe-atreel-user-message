@@ -40,7 +40,7 @@ func ConvertJSONToHTMLABE(htmlAbeData *ConvertJSONToHTMLAbeData, config *models.
 			countAgent = htmlAbeData.OAgentsResults[i].Agent.JobsCount
 			SearchURL := htmlAbeData.OAgentsResults[i].SeoURL
 			nameAgent := htmlAbeData.OAgentsResults[i].Agent.NameAgent
-			locationAgent = getLocationAgent(&htmlAbeData.OAgentsResults[i].Agent)
+			locationAgent = getLocationAgent(&htmlAbeData.OAgentsResults[i].Agent, htmlAbeData.StateDic)
 			if countAgent >= countAgena {
 				countAgena = countAgent
 				locationAgena = locationAgent
@@ -92,7 +92,7 @@ func getJobData(jobs *models.SubVacantesJob, config *models.Configuration, urlCo
 	return jobData
 }
 
-func getLocationAgent(agent *models.Agent) string {
+func getLocationAgent(agent *models.Agent, stateDic map[string]string) string {
 	if agent.LocationCity != "" {
 		if agent.LocationCity == constants.YZonaMetro {
 			return agent.LocationState + " " + agent.LocationCity
