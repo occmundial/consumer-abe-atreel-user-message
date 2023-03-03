@@ -1,40 +1,69 @@
 ---
 kind: pipeline
-type: kubernetes
+type: docker
 name: code-analysis
 environment:
+  PROJECT: consumer-abe-atreel-user-message
   PROJECT_KEY: consumer-abe-atreel-user-message
+platform:
+  os: windows
+  arch: amd64
+  version: "1809"
+node:
+  runner_os: windows
 trigger:
   branch:
   - master
-  - development
+  - main
   event:
-  - pull_request
+  - pull_request  
 steps:
-- name: dependency-check
-  image: owasp/dependency-check
+- name: sonarqube
+  image: mcr.microsoft.com/dotnet/framework/sdk:4.8
+  environment:
+    SONARSCANNER_VERSION: "5.2.1.31210"
+    SONAR_HOST: https://sonar.occdeep.io
+    SONAR_TOKEN:
+      from_secret: sonar_token
   commands:
-  - sed -i -e "s/PROJECT_VERSION/${DRONE_COMMIT_SHA:0:8}/g" sonar-project.properties
-  - /usr/share/dependency-check/bin/dependency-check.sh -s . -f JSON -f HTML -f XML --enableExperimental --go .
+  - .\sonarscanner.ps1
+  - nuget restore
+  - cd $env:DRONE_WORKSPACE\$env:PROJECT
+  - SonarScanner.MSBuild.exe begin /k:$env:PROJECT_KEY /d:sonar.login=$env:SONAR_TOKEN /v:${DRONE_COMMIT_SHA:0:8} /n:$env:PROJECT
+  - MSbuild.exe /t:Rebuild
+  - C:\dependency-check\dependency-check\bin\dependency-check.bat --project $env:PROJECT --scan .\ --out $env:DRONE_WORKSPACE\$env:PROJECT\.sonarqube\out\dependency -f JSON -f HTML -f XML 
+  - SonarScanner.MSBuild.exe end /d:sonar.login="$env:SONAR_TOKEN"
+
 
 ---
 kind: pipeline
-type: docker
 name: development
+type: kubernetes
+
 steps:
-  - name: build
+
+  # - name: test
+  #   image: mcr.microsoft.com/dotnet/sdk:6.0
+  #   environment: 
+  #     GO111MODULE: "on"
+  #     GOPATH: "/drone/"
+  #   commands:
+  #     - dotnet test
+
+
+  - name: build-development
     image: plugins/docker
     settings:
       repo: occmundial/consumer-abe-atreel-user-message
       tags: ${DRONE_COMMIT_SHA:0:8}
       username:
         from_secret: docker_devops_user
-      password:
+      password: 
         from_secret: docker_devops_password
       dockerfile: Dockerfile
       build_args:
-        - ENV=dev
-        - VERSION=${DRONE_COMMIT_SHA:0:8}
+      - version=${DRONE_COMMIT_SHA:0:8}
+
 
   - name: push to gitops
     image: alpine/git
@@ -52,49 +81,55 @@ steps:
 trigger:
   branch:
     - development
-    - feat/ci
   event:
     - push
 
 ---
 kind: pipeline
-type: kubernetes
 name: production
+type: kubernetes
+
 steps:
-- name: build
-  image: plugins/docker
-  settings:
-    repo: occmundial/consumer-abe-atreel-user-message
-    tags: ${DRONE_COMMIT_SHA:0:8}
-    username:
-      from_secret: docker_devops_user
-    password:
-      from_secret: docker_devops_password
-    dockerfile: Dockerfile
-    build_args:
-      - env=prod
+
+  # - name: test
+  #   image: mcr.microsoft.com/dotnet/sdk:6.0
+  #   environment: 
+  #     GO111MODULE: "on"
+  #     GOPATH: "/drone/"
+  #   commands:
+  #     - dotnet test
+  - name: build-production
+    image: plugins/docker
+    settings:
+      repo: occmundial/consumer-abe-atreel-user-message
+      tags: ${DRONE_COMMIT_SHA:0:8}
+      username:
+        from_secret: docker_devops_user
+      password: 
+        from_secret: docker_devops_password
+      dockerfile: Dockerfile
+      build_args:
       - version=${DRONE_COMMIT_SHA:0:8}
 
-- name: push consumer-abe-atreel-user-message to gitops
-  image: alpine/git
-  commands:
-    - apk update && apk --no-cache add bash curl
-    - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
-    - cp kustomize /usr/local/bin/kustomize
-    - git clone -b main https://github.com/occmundial/gitops-occ.git
-    - cd gitops-occ/Atreel/consumer-abe-atreel-user-message/overlays/production
-    - /usr/local/bin/kustomize edit set image occmundial/consumer-abe-atreel-user-message:${DRONE_COMMIT_SHA:0:8}
-    - git config --local user.name "Drone"
-    - git config --local user.email "devops@occ.com.mx"
-    - git commit -a -m " Atreel/consumer-abe-atreel-user-message new version ${DRONE_COMMIT_SHA:08}"
-    - git push origin main 
+  - name: push to gitops
+    image: alpine/git
+    commands:
+      - apk update && apk --no-cache add bash curl
+      - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+      - cp kustomize /usr/local/bin/kustomize
+      - git clone -b main https://github.com/occmundial/gitops-occ.git
+      - cd gitops-occ/Atreel/consumer-abe-atreel-user-message/overlays/production
+      - /usr/local/bin/kustomize edit set image occmundial/consumer-abe-atreel-user-message:${DRONE_COMMIT_SHA:0:8}
+      - git config --local user.name "Drone"
+      - git config --local user.email "devops@occ.com.mx"
+      - git commit -a -m " Atreel/consumer-abe-atreel-user-message new version ${DRONE_COMMIT_SHA:0:8}"
+      - git push origin main
 
 trigger:
   branch:
-    - main
+    - feature/Configuration-Cron-Docker-Image-SQL
   event:
     - push
-
 
 
 ---
