@@ -39,7 +39,7 @@ func createConnection(config *models.Configuration) *sql.DB {
 
 	connection, err := sql.Open("sqlserver", dataSourceName)
 	if err != nil {
-		logger.Fatal("repositories", "createConnection", err)
+		logger.Fatal("database", "createConnection", err)
 	}
 	connection.SetMaxOpenConns(config.DBMaxOpenConns)
 	connection.SetMaxIdleConns(config.DBMaxIdleConns)
