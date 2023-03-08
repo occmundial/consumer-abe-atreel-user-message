@@ -51,7 +51,7 @@ func (service *ConsumerService) ProcessMessage() models.ProcessStatus {
 // status => status para mensaje válido y procesado
 // error  => error de procesamiento
 func (service *ConsumerService) isValidMessage(message *models.MessageForRead) (isValid bool, status string, err error) {
-	if !sendgrid.IsValidMessage(message.Message) {
+	if !sendgrid.IsValidMessage(&message.Message) {
 		return false, constants.StatusAlreadyProcessed, nil
 	}
 	processed, err := service.Repository.IsProcessedMessage(message)

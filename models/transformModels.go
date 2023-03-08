@@ -47,6 +47,16 @@ type Personalizations struct {
 	To                  []string            `json:"to,omitempty"`
 }
 
+type TlalocLocation struct {
+	ID            string        `json:"id"`
+	StateName     string        `json:"stateName"`
+	Compatibility Compatibility `json:"compatibility"`
+}
+
+type Compatibility struct {
+	Locations string `json:"locations"`
+}
+
 type Agents struct {
 	Agent  Agent            `json:"agent" `
 	Jobs   []SubVacantesJob `json:"jobs" `
@@ -93,4 +103,8 @@ type Bullet struct {
 	Description string `json:"description"`
 	Icon        string `json:"icon"`
 	Tooltip     string `json:"tooltip"`
+}
+
+type TlalocResponse struct {
+	Locations []TlalocLocation `json:"Locations"`
 }

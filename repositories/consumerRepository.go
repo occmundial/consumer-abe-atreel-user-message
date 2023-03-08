@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/occmundial/consumer-abe-atreel-user-message/database"
-	"github.com/occmundial/consumer-abe-atreel-user-message/interfaces"
 	"github.com/occmundial/consumer-abe-atreel-user-message/libs"
 	"github.com/occmundial/consumer-abe-atreel-user-message/models"
 	"github.com/occmundial/consumer-abe-atreel-user-message/sendgrid"
@@ -19,8 +17,8 @@ var (
 )
 
 // NewConsumerRepository : Factory que crea un "ConsumerRepository"
-func NewConsumerRepository(conf *models.Configuration, p *sendgrid.AtreelProcessor, q *database.Queries) *ConsumerRepository {
-	cr := ConsumerRepository{conf, p, q, libs.InitHTTPClient(conf)}
+func NewConsumerRepository(conf *models.Configuration, p *sendgrid.AtreelProcessor) *ConsumerRepository {
+	cr := ConsumerRepository{conf, p, libs.InitHTTPClient(conf)}
 	cr.init()
 	return &cr
 }
@@ -29,7 +27,6 @@ func NewConsumerRepository(conf *models.Configuration, p *sendgrid.AtreelProcess
 type ConsumerRepository struct {
 	Configuration   *models.Configuration
 	AtreelProcessor *sendgrid.AtreelProcessor
-	Queries         interfaces.IQuery
 	httpClient      *http.Client
 }
 
@@ -57,7 +54,7 @@ func (ConsumerRepository) CommitMessage(message *models.MessageForRead) error {
 func (repository ConsumerRepository) IsHealthProcessToStart() (bool, error) {
 	chanHealth := make(chan string)
 	defer closeChannels(chanHealth)
-	go processHealth(chanHealth, repository.httpClient, repository.Queries)
+	go processHealth(chanHealth, repository.Configuration, repository.httpClient)
 	emailsHealth := <-chanHealth
 	err := concatErrors(emailsHealth)
 	return err == nil, err

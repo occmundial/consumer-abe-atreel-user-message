@@ -7,4 +7,6 @@ type MessageToProcess struct {
 	Name            string
 	Email           string
 	Recommendations []Agents
+	AbSide          string
+	AbTestName      string
 }

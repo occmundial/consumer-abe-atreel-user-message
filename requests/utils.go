@@ -22,7 +22,9 @@ const (
 type ConvertJSONToHTMLAbeData struct {
 	OAgentsResults []models.Agents
 	Name           string
-	StateDic       map[string]string
+	LocTlaloc      map[string]models.TlalocLocation
+	AbSide         string
+	AbTestName     string
 }
 
 func ConvertJSONToHTMLABE(htmlAbeData *ConvertJSONToHTMLAbeData, config *models.Configuration) ([]int, models.DynamicTemplateData) {
@@ -33,6 +35,8 @@ func ConvertJSONToHTMLABE(htmlAbeData *ConvertJSONToHTMLAbeData, config *models.
 	nameAgenta := ""
 	countAgent := 0
 	countAgena := 0
+	abSide := htmlAbeData.AbSide
+	abTestName := htmlAbeData.AbTestName
 	ABEs := []models.Abes{}
 	for i := range htmlAbeData.OAgentsResults {
 		urlCompany := ""
@@ -40,7 +44,7 @@ func ConvertJSONToHTMLABE(htmlAbeData *ConvertJSONToHTMLAbeData, config *models.
 			countAgent = htmlAbeData.OAgentsResults[i].Agent.JobsCount
 			SearchURL := htmlAbeData.OAgentsResults[i].SeoURL
 			nameAgent := htmlAbeData.OAgentsResults[i].Agent.NameAgent
-			locationAgent = getLocationAgent(&htmlAbeData.OAgentsResults[i].Agent, htmlAbeData.StateDic)
+			locationAgent = getLocationAgent(&htmlAbeData.OAgentsResults[i].Agent, htmlAbeData.LocTlaloc)
 			if countAgent >= countAgena {
 				countAgena = countAgent
 				locationAgena = locationAgent
@@ -59,7 +63,7 @@ func ConvertJSONToHTMLABE(htmlAbeData *ConvertJSONToHTMLAbeData, config *models.
 				url := htmlAbeData.OAgentsResults[i].Jobs[j].FriendlyCompanyURL
 				companyNamePretty := htmlAbeData.OAgentsResults[i].Jobs[j].Companynamepretty
 				urlCompany = config.Occ + "/" + url + params + companyNamePretty
-				dataJobs = append(dataJobs, getJobData(&htmlAbeData.OAgentsResults[i].Jobs[j], config, urlCompany))
+				dataJobs = append(dataJobs, getJobData(&htmlAbeData.OAgentsResults[i].Jobs[j], abSide, abTestName, urlCompany, config))
 			}
 			dataAbe.Jobs = dataJobs
 			ABEs = append(ABEs, dataAbe)
@@ -74,25 +78,30 @@ func ConvertJSONToHTMLABE(htmlAbeData *ConvertJSONToHTMLAbeData, config *models.
 	return jobIds, dynamicTemplateData
 }
 
-func getJobData(jobs *models.SubVacantesJob, config *models.Configuration, urlCompany string) models.Jobs {
+func getJobData(job *models.SubVacantesJob, abSide, abTestName, urlCompany string, config *models.Configuration) models.Jobs {
 	jobData := models.Jobs{}
 	jobData.URLEmpresa = urlCompany
-	jobData.TituloOferta = jobs.Title
-	jobData.URLOferta = jobs.URL
-	jobData.NombreEmpresa = jobs.Companyname
-	jobData.Region = jobs.Locationdescription
-	if jobs.Showsalary {
+	jobData.TituloOferta = job.Title
+	params := strings.ReplaceAll(config.ABEUTMJob, `|idHtml|`, constants.HTMLDefault)
+	urlJobs := config.Occ + "/empleo/oferta/" + strconv.Itoa(job.ID) + "?" + params
+	urlJobs = strings.ReplaceAll(urlJobs, "|abside|", abSide)
+	urlJobs = strings.ReplaceAll(urlJobs, "|abtestname|", abTestName)
+	urlJobs = strings.ReplaceAll(urlJobs, "|jobid|", strconv.Itoa(job.ID))
+	jobData.URLOferta = urlJobs + "&new_alg=true"
+	jobData.NombreEmpresa = job.Companyname
+	jobData.Region = job.Locationdescription
+	if job.Showsalary {
 		ac := accounting.Accounting{Symbol: "$", Precision: 2}
-		salaryFrom := ac.FormatMoney(jobs.Salaryfrom)
-		salaryTo := ac.FormatMoney(jobs.Salaryto)
-		jobData.Sueldo = salaryFrom + " - " + salaryTo + " " + getLookup(jobs.Salarytime)
+		salaryFrom := ac.FormatMoney(job.Salaryfrom)
+		salaryTo := ac.FormatMoney(job.Salaryto)
+		jobData.Sueldo = salaryFrom + " - " + salaryTo + " " + getLookup(job.Salarytime)
 	} else {
 		jobData.Sueldo = config.TxtSalary
 	}
 	return jobData
 }
 
-func getLocationAgent(agent *models.Agent, stateDic map[string]string) string {
+func getLocationAgent(agent *models.Agent, locTlaloc map[string]models.TlalocLocation) string {
 	if agent.LocationCity != "" {
 		if agent.LocationCity == constants.YZonaMetro {
 			return agent.LocationState + " " + agent.LocationCity
@@ -100,7 +109,7 @@ func getLocationAgent(agent *models.Agent, stateDic map[string]string) string {
 			return agent.LocationCity
 		}
 	} else if agent.LocationState != "" {
-		var locationAgent = stateDic[agent.LocationState]
+		var locationAgent = locTlaloc[agent.LocationState].StateName
 		if locationAgent == "" {
 			return constants.MEXICO
 		} else {

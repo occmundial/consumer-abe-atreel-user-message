@@ -13,6 +13,7 @@ type Configuration struct {
 	TxtSalary     string
 	Occ           string
 	AbeUtmEmpresa string
+	ABEUTMJob     string
 
 	// APIs
 	RetryWaitMin int
@@ -20,15 +21,6 @@ type Configuration struct {
 	RetryMax     int
 	APITimeout   int
 	APIAtreel    string `env:"API_ATREEL"`
-
-	// Database
-	DBTimeout         int
-	DBUser            string `env:"DB_USER"`
-	DBPassword        string `env:"DB_PASSWORD"`
-	DBName            string `env:"DB_NAME"`
-	DBPort            int    `env:"DB_PORT"`
-	DBHost            string `env:"DB_HOST"`
-	DBMaxOpenConns    int    `env:"DB_MaxOpenConns"`
-	DBMaxIdleConns    int    `env:"DB_MaxIdlesConns"`
-	DBConnMaxLifetime int    `env:"DB_ConnMaxLifetime"`
+	APITlaloc    string `env:"API_TLALOC"`
+	TokenTlaloc  string `env:"TLALOC_TOKEN"`
 }

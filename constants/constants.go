@@ -25,4 +25,5 @@ const (
 	TemplateID      = "d-1488308ecee24468b2f83c52bbeadf11"
 	Platform        = "ABE"
 	JSONContentType = "application/json"
+	TlalocLocation  = "tlaloc/locations"
 )

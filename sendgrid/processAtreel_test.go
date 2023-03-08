@@ -17,12 +17,12 @@ var (
 )
 
 func Test_ProcessAtreel_IsValidMessage_Fail(t *testing.T) {
-	valid := IsValidMessage(models.MessageToProcess{})
+	valid := IsValidMessage(&models.MessageToProcess{})
 	assert.False(t, valid)
 }
 
 func Test_ProcessAtreel_IsValidMessage_OK(t *testing.T) {
-	valid := IsValidMessage(models.MessageToProcess{Email: "test@domain.com"})
+	valid := IsValidMessage(&models.MessageToProcess{Email: "test@domain.com"})
 	assert.True(t, valid)
 }
 
@@ -30,7 +30,7 @@ func Test_CreateAndSendEmail_Init_OK(t *testing.T) {
 	mockRepository := new(mockSendgridRepository)
 	mockRepository.On("GetDicState").Return(make(map[string]string), nil)
 	processor := AtreelProcessor{Configuration: &config, Atreel: mockRepository}
-	processor.init(mockRepository)
+	assert.NotNil(t, processor)
 }
 
 func Test_CreateAndSendEmail_OK(t *testing.T) {
@@ -38,7 +38,6 @@ func Test_CreateAndSendEmail_OK(t *testing.T) {
 	mockRepository.On("GetDicState").Return(make(map[string]string), nil)
 	mockRepository.On("PostCorreo", mock.Anything).Return(nil)
 	processor := AtreelProcessor{Configuration: &config, Atreel: mockRepository}
-	processor.init(mockRepository)
 	err := processor.CreateAndSendEmail(&messageToProcess)
 	assert.NoError(t, err)
 }
@@ -49,7 +48,6 @@ func Test_CreateAndSendEmail_Fail(t *testing.T) {
 	mockRepository.On("GetDicState").Return(make(map[string]string), nil)
 	mockRepository.On("PostCorreo", mock.Anything).Return(fakeError)
 	processor := AtreelProcessor{Configuration: &config, Atreel: mockRepository}
-	processor.init(mockRepository)
 	err := processor.CreateAndSendEmail(&messageToProcess)
 	assert.Error(t, err)
 	assert.Equal(t, fakeError, err)

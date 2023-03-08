@@ -9,11 +9,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const side = "abSide"
+const abName = "abTestName"
+
 var (
-	configuration = models.Configuration{Occ: "www.occ.com.mx", TxtSalary: "Sin sueldo"}
-	nombre        = "nombreJob"
-	testStateDic  = make(map[string]string)
-	agents        = models.Agents{
+	config       = models.Configuration{Occ: "www.occ.com.mx", TxtSalary: "Sin sueldo"}
+	nombre       = "nombreJob"
+	testStateDic = make(map[string]models.TlalocLocation)
+	agents       = models.Agents{
 		Agent: models.Agent{
 			Agenteid:         1,
 			Name:             "name",
@@ -154,7 +157,8 @@ func Test_GetSubjectByDay_OK_Sunday_2(t *testing.T) {
 }
 
 func Test_ConvertJsonToHtml_ABE_Empty_ALL_OK(t *testing.T) {
-	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{[]models.Agents{}, nombre, testStateDic}, &configuration)
+	convertJSONToHTMLAbeData := ConvertJSONToHTMLAbeData{[]models.Agents{}, nombre, testStateDic, side, abName}
+	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&convertJSONToHTMLAbeData, &config)
 	assert.Equal(t, 0, len(jobIds))
 	assert.Equal(t, nombre, dynamicTemplateData.Nombre)
 	assert.Equal(t, "", dynamicTemplateData.Subject)
@@ -163,7 +167,7 @@ func Test_ConvertJsonToHtml_ABE_Empty_ALL_OK(t *testing.T) {
 
 func Test_ConvertJsonToHtml_ABE_Without_SubVacantesJob__Mexico_OK(t *testing.T) {
 	agents := []models.Agents{agents}
-	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic}, &configuration)
+	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic, side, abName}, &config)
 	assert.Equal(t, 0, len(jobIds))
 	assert.Equal(t, nombre, dynamicTemplateData.Nombre)
 	assert.True(t, strings.Contains(dynamicTemplateData.Subject, constants.MEXICO))
@@ -172,7 +176,7 @@ func Test_ConvertJsonToHtml_ABE_Without_SubVacantesJob__Mexico_OK(t *testing.T) 
 
 func Test_ConvertJsonToHtml_ABE_Without_SubVacantesJob__Mexico2_OK(t *testing.T) {
 	agents := []models.Agents{agents2}
-	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic}, &configuration)
+	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic, side, abName}, &config)
 	assert.Equal(t, 0, len(jobIds))
 	assert.Equal(t, nombre, dynamicTemplateData.Nombre)
 	assert.True(t, strings.Contains(dynamicTemplateData.Subject, "Corregidora"))
@@ -181,7 +185,7 @@ func Test_ConvertJsonToHtml_ABE_Without_SubVacantesJob__Mexico2_OK(t *testing.T)
 
 func Test_ConvertJsonToHtml_ABE_Without_SubVacantesJob__Mexico3_OK(t *testing.T) {
 	agents := []models.Agents{agents3}
-	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic}, &configuration)
+	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic, side, abName}, &config)
 	assert.Equal(t, 0, len(jobIds))
 	assert.Equal(t, nombre, dynamicTemplateData.Nombre)
 	assert.True(t, strings.Contains(dynamicTemplateData.Subject, constants.MEXICO))
@@ -189,9 +193,9 @@ func Test_ConvertJsonToHtml_ABE_Without_SubVacantesJob__Mexico3_OK(t *testing.T)
 }
 
 func Test_ConvertJsonToHtml_ABE_Without_SubVacantesJob_Queretaro_OK(t *testing.T) {
-	testStateDic["001"] = "Querétaro"
+	testStateDic["001"] = models.TlalocLocation{ID: "001", StateName: "Querétaro"}
 	agents := []models.Agents{agents}
-	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic}, &configuration)
+	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic, side, abName}, &config)
 	assert.Equal(t, 0, len(jobIds))
 	assert.Equal(t, nombre, dynamicTemplateData.Nombre)
 	assert.True(t, strings.Contains(dynamicTemplateData.Subject, "Querétaro"), dynamicTemplateData.Subject)
@@ -200,7 +204,7 @@ func Test_ConvertJsonToHtml_ABE_Without_SubVacantesJob_Queretaro_OK(t *testing.T
 
 func Test_ConvertJsonToHtml_ABE_With_SubVacantesJob_OK(t *testing.T) {
 	agents := []models.Agents{agentsWithJobs, agentsWithJobs}
-	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic}, &configuration)
+	jobIds, dynamicTemplateData := ConvertJSONToHTMLABE(&ConvertJSONToHTMLAbeData{agents, nombre, testStateDic, side, abName}, &config)
 	assert.Equal(t, 4, len(jobIds))
 	assert.Equal(t, nombre, dynamicTemplateData.Nombre)
 	assert.True(t, len(dynamicTemplateData.Subject) > 0)

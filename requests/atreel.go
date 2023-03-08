@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/occmundial/consumer-abe-atreel-user-message/constants"
-	"github.com/occmundial/consumer-abe-atreel-user-message/database"
 	"github.com/occmundial/consumer-abe-atreel-user-message/interfaces"
 	"github.com/occmundial/consumer-abe-atreel-user-message/libs"
 	"github.com/occmundial/consumer-abe-atreel-user-message/libs/logger"
@@ -20,14 +19,14 @@ import (
 var (
 	urlAtreel       string
 	urlAtreelHealth string
-	stateDic        map[string]string
+	locTlaloc       map[string]models.TlalocLocation
 )
 
-func NewAtreel(configuration *models.Configuration, queries *database.Queries) *Atreel {
+func NewAtreel(configuration *models.Configuration, tlaloc *Tlaloc) *Atreel {
 	retryHTTPClient := libs.InitRetryHTTPClient(configuration)
 	httpClient := libs.InitHTTPClient(configuration)
 	cs := Atreel{Configuration: configuration, RetryHTTPClient: retryHTTPClient, HTTPClient: httpClient}
-	cs.init(queries)
+	cs.init(tlaloc)
 	return &cs
 }
 
@@ -37,18 +36,21 @@ type Atreel struct {
 	HTTPClient      *http.Client
 }
 
-func (atreel Atreel) init(queries interfaces.IQuery) {
+func (atreel Atreel) init(tlaloc interfaces.ITlaloc) {
 	urlAtreel = fmt.Sprintf("%s/atreel/v3/emails", strings.TrimSuffix(atreel.Configuration.APIAtreel, "/"))
 	urlAtreelHealth = fmt.Sprintf("%s/health", strings.TrimSuffix(atreel.Configuration.APIAtreel, "/"))
 	var err error
-	stateDic, err = queries.GetDicState()
+	locTlaloc, err = tlaloc.GetLocTlaloc()
 	if err != nil {
 		logger.Fatal("processAtreel", "init", err)
 	}
 }
 
 func (atreel Atreel) PostCorreo(messageFromKafka *models.MessageToProcess) error {
-	data := ConvertJSONToHTMLAbeData{messageFromKafka.Recommendations, messageFromKafka.Name, stateDic}
+	side := messageFromKafka.AbSide
+	abTestName := messageFromKafka.AbTestName
+	name := messageFromKafka.Name
+	data := ConvertJSONToHTMLAbeData{messageFromKafka.Recommendations, name, locTlaloc, side, abTestName}
 	jobsIds, dynamicTemplateData := ConvertJSONToHTMLABE(&data, atreel.Configuration)
 	sendgridJSON := models.SendgridJSON{
 		TemplateID: constants.TemplateID,
