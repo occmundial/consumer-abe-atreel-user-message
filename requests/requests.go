@@ -30,7 +30,9 @@ func (requests Requests) SendRequestAndBody(r interfaces.RequestData) (*http.Res
 	}
 	request := new(http.Request)
 	request.Header = headers
-	request.Header.Add("Content-Type", r.ContentType)
+	if r.ContentType != "" {
+		request.Header.Add("Content-Type", r.ContentType)
+	}
 	request.Method = r.Method
 	request.URL = parsedURL
 	if r.Data != "" {
