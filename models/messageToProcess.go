@@ -3,10 +3,10 @@ package models
 // MessageToProcess : mensaje a procesar
 
 type MessageToProcess struct {
-	LoginID         string
-	Name            string
-	Email           string
-	Recommendations []Agents
-	AbSide          string
-	AbTestName      string
+	LoginID         string   `json:"loginID"`
+	Name            string   `json:"name"`
+	Email           string   `json:"email"`
+	Recommendations []Agents `json:"recommendations"`
+	AbSide          string   `json:"abSide"`
+	AbTestName      string   `json:"abTestName"`
 }
