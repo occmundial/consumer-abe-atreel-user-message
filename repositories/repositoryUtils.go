@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/occmundial/consumer-abe-atreel-user-message/interfaces"
 	"github.com/occmundial/consumer-abe-atreel-user-message/models"
 	"github.com/occmundial/consumer-abe-atreel-user-message/requests"
 
@@ -48,10 +47,10 @@ func deserializeMessage(flatMessage []byte) (models.MessageToProcess, error) {
 }
 
 // processHealth : regresa el statusCode del endpoint de salud
-func processHealth(chanErrorMsg chan string, httpClient *http.Client, queries interfaces.IQuery) {
+func processHealth(chanErrorMsg chan string, config *models.Configuration, httpClient *http.Client) {
 	atreelError := requests.AtreelCheckHealth(httpClient)
-	dbError := queries.CheckHealth()
-	chanErrorMsg <- getError(atreelError, dbError)
+	tlalocError := requests.TlalocCheckHealth(httpClient, config.APITlaloc)
+	chanErrorMsg <- getError(atreelError, tlalocError)
 }
 
 func getError(errs ...error) string {

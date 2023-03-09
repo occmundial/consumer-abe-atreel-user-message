@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/occmundial/consumer-abe-atreel-user-message/config"
-	"github.com/occmundial/consumer-abe-atreel-user-message/database"
 	"github.com/occmundial/consumer-abe-atreel-user-message/libs/logger"
 	"github.com/occmundial/consumer-abe-atreel-user-message/processor"
 	"github.com/occmundial/consumer-abe-atreel-user-message/repositories"
@@ -34,9 +33,8 @@ func buildContainer() *dig.Container {
 	c := dig.New()
 	logger.ConditionalFatal("container", "buildContainer",
 		c.Provide(config.NewConfiguration),
-		c.Provide(database.NewSQLServer),
+		c.Provide(requests.NewTlaloc),
 		c.Provide(requests.NewRequests),
-		c.Provide(database.NewQueries),
 		c.Provide(requests.NewAtreel),
 		c.Provide(sendgrid.NewAtreelProcessor),
 		c.Provide(repositories.NewConsumerRepository),
