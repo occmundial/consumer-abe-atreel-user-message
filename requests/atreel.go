@@ -42,7 +42,7 @@ func (atreel Atreel) init(tlaloc interfaces.ITlaloc) {
 	var err error
 	locTlaloc, err = tlaloc.GetLocTlaloc()
 	if err != nil {
-		logger.Fatal("processAtreel", "init", err)
+		logger.Fatal("requests", "init", err)
 	}
 }
 

@@ -38,7 +38,7 @@ func (tlaloc Tlaloc) init() {
 
 func (tlaloc Tlaloc) GetLocTlaloc() (map[string]models.TlalocLocation, error) {
 	headers := make(http.Header)
-	headers["Authorization"] = []string{tokenTlaloc}
+	headers.Add("Authorization", tokenTlaloc)
 	response, body, err := tlaloc.Requests.SendRequestAndBody(interfaces.RequestData{
 		URL:     urlTlaloc,
 		Method:  "GET",
@@ -65,7 +65,7 @@ func (tlaloc Tlaloc) GetLocTlaloc() (map[string]models.TlalocLocation, error) {
 }
 
 func (tlaloc Tlaloc) getCodeStatusError(response *http.Response) string {
-	return "tlaloc error, status code invalid." + urlTlaloc + strconv.Itoa(response.StatusCode)
+	return "tlaloc error, status code invalid. URL: " + urlTlaloc + ", code: " + strconv.Itoa(response.StatusCode)
 }
 
 func TlalocCheckHealth(httpClient *http.Client, apiTlaloc string) error {
